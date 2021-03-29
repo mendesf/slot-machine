@@ -1,3 +1,4 @@
+import { ShufflingResult } from './SlotShuffler';
 import Aux from '../SlotEnum';
 
 const { ccclass, property } = cc._decorator;
@@ -83,21 +84,32 @@ export default class Machine extends cc.Component {
     this.button.getComponent(cc.Button).interactable = false;
   }
 
-  stop(result: Array<Array<number>> = null): void {
-    setTimeout(() => {
-      this.spinning = false;
-      this.button.getComponent(cc.Button).interactable = true;
-      this.button.getChildByName('Label').getComponent(cc.Label).string = 'SPIN';
-    }, 2500);
-
+  stop(result: ShufflingResult = null): void {
+    const promises: Array<Promise<void>> = [];
     const rngMod = Math.random() / 2;
-    for (let i = 0; i < this.numberOfReels; i += 1) {
-      const spinDelay = i < 2 + rngMod ? i / 4 : rngMod * (i - 2) + i / 4;
-      const theReel = this.reels[i].getComponent('Reel');
 
-      setTimeout(() => {
-        theReel.readyStop(result[i]);
-      }, spinDelay * 1000);
+    for (let i = 0; i < this.numberOfReels; i += 1) {
+      const promise = new Promise<void>(resolve => {
+        const spinDelay = i < 2 + rngMod ? i / 4 : rngMod * (i - 2) + i / 4;
+        const theReel = this.reels[i].getComponent('Reel');
+
+        setTimeout(() => {
+          theReel.readyStop(result.slots[i]);
+          resolve();
+        }, spinDelay * 1000);
+      });
+
+      promises.push(promise);
     }
+
+    const waitingTime = 500;
+
+    Promise.all(promises).then(() => {
+      setTimeout(() => {
+        this.spinning = false;
+        this.button.getComponent(cc.Button).interactable = true;
+        this.button.getChildByName('Label').getComponent(cc.Label).string = 'SPIN';
+      }, waitingTime);
+    });
   }
 }

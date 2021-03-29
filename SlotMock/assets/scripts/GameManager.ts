@@ -1,19 +1,28 @@
+import SlotShuffler, { ShufflingResult } from './slots/SlotShuffler';
+import Machine from './slots/Machine';
+
 const { ccclass, property } = cc._decorator;
 
 @ccclass
 export default class GameManager extends cc.Component {
-  @property(cc.Node)
-  machine = null;
+  @property({ type: cc.Node })
+  machine: cc.Node = null;
 
   @property({ type: cc.AudioClip })
   audioClick = null;
 
   private block = false;
 
-  private result = null;
+  private result: ShufflingResult = null;
+
+  private machineScript: Machine;
+
+  onLoad(): void {
+    this.machineScript = this.machine.getComponent('Machine');
+  }
 
   start(): void {
-    this.machine.getComponent('Machine').createMachine();
+    this.machineScript.createMachine();
   }
 
   update(): void {
@@ -26,13 +35,13 @@ export default class GameManager extends cc.Component {
   click(): void {
     cc.audioEngine.playEffect(this.audioClick, false);
 
-    if (this.machine.getComponent('Machine').spinning === false) {
+    if (this.machineScript.spinning === false) {
       this.block = false;
-      this.machine.getComponent('Machine').spin();
+      this.machineScript.spin();
       this.requestResult();
     } else if (!this.block) {
       this.block = true;
-      this.machine.getComponent('Machine').lock();
+      this.machineScript.lock();
     }
   }
 
@@ -41,17 +50,19 @@ export default class GameManager extends cc.Component {
     this.result = await this.getAnswer();
   }
 
-  getAnswer(): Promise<Array<Array<number>>> {
-    const slotResult = [];
-    return new Promise<Array<Array<number>>>(resolve => {
+  getAnswer(): Promise<ShufflingResult> {
+    const { numberOfReels } = this.machineScript;
+    const result = new SlotShuffler().shuffle(numberOfReels);
+
+    return new Promise<ShufflingResult>(resolve => {
       setTimeout(() => {
-        resolve(slotResult);
+        resolve(result);
       }, 1000 + 500 * Math.random());
     });
   }
 
   informStop(): void {
     const resultRelayed = this.result;
-    this.machine.getComponent('Machine').stop(resultRelayed);
+    this.machineScript.stop(resultRelayed);
   }
 }
