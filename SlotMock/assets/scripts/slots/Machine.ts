@@ -1,5 +1,6 @@
 import { ShufflingResult } from './SlotShuffler';
 import Aux from '../SlotEnum';
+import LineGlowManager from './LineGlowManager';
 
 const { ccclass, property } = cc._decorator;
 
@@ -45,6 +46,12 @@ export default class Machine extends cc.Component {
 
   public spinning = false;
 
+  private lineGlowManager: LineGlowManager = null;
+
+  onLoad(): void {
+    this.lineGlowManager = this.getComponent(LineGlowManager);
+  }
+
   createMachine(): void {
     this.node.destroyAllChildren();
     this.reels = [];
@@ -64,6 +71,8 @@ export default class Machine extends cc.Component {
   }
 
   spin(): void {
+    this.lineGlowManager.removeLineGlow();
+
     this.spinning = true;
     this.button.getChildByName('Label').getComponent(cc.Label).string = 'STOP';
 
@@ -109,6 +118,7 @@ export default class Machine extends cc.Component {
         this.spinning = false;
         this.button.getComponent(cc.Button).interactable = true;
         this.button.getChildByName('Label').getComponent(cc.Label).string = 'SPIN';
+        this.lineGlowManager.addLineGlow(result.equalLines);
       }, waitingTime);
     });
   }

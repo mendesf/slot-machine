@@ -7768,7 +7768,9 @@
       "__id__": 4
     },
     "_enabled": true,
-    "glowPrefab": null,
+    "glowPrefab": {
+      "__uuid__": "898738e3-efe0-48ba-b4c3-4f28468388aa"
+    },
     "_id": "e2gvzr53tIz4Hut6EkqbP+"
   }
 ]
